@@ -1,53 +1,88 @@
+// main.js
+
 require('dotenv').config();
-
-// Import discord.js
-const { Client, GatewayIntentBits } = require('discord.js');
-
-// Create a new client instance
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions
-    ]
-});
+const { client, getMetadata } = require('./getMetadata');
+const {
+    readPreviousData,
+    saveCurrentData,
+    updatePreviousData,
+} = require('./saveMetadata');
+const { compareData } = require('./compareMetadata');
 
 // Login to Discord with your token
 client.login(process.env.DISCORD_TOKEN);
 
-// Ready Event
+// When the client is ready, run this code
 client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
+    // Fetch and save thread metadata
+    const threadData = await getMetadata();
 
-    // Replace 'YOUR_CHANNEL_ID' with the ID of the channel you want to track
-    try {
-        const channel = await client.channels.fetch(process.env.CHANNEL_ID);
-        console.log(`Channel ID: ${channel.id}`);
-        console.log(`Channel Name: ${channel.name}`);
-        console.log(`Channel Type: ${channel.type}`);
+    console.log('Thread data fetched:', threadData);
 
-        if (channel.isTextBased()) {
-            console.log(`Successfully fetched channel: ${channel.name}`);
+    // Save the current data
+    saveCurrentData(threadData);
 
-        } else {
-            console.log('Channel is not text-based. Cannot track messages.');
-            return;
-        }
+    // Group threads by week
+    const threadsByWeek = groupThreadsByWeek(threadData);
 
-        // Fetch recent messages from the channel
-        channel.messages.fetch({ limit: 100 }).then(messages => {
-            console.log(`Successfully fetched ${messages.size} messages.`);
+    // Analyze data per week
+    analyzeThreadsByWeek(threadsByWeek);
 
-            messages.forEach(message => {
-                console.log(`Message: ${message.content}, Author: ${message.author.username}`);
-            });
-
-        }).catch(error => {
-            console.log('Failed to fetch messages:', error.message);
-        });
-    } catch (error) {
-        console.log('Failed to fetch channel:', error.message);
-    }
+    // ... existing code for comparison, if needed ...
 });
+
+// Function to group threads by week
+function groupThreadsByWeek(threadData) {
+    const threadsByWeek = {};
+
+    threadData.forEach((thread) => {
+        const weekNumber = thread.weekNumber || 0;
+        if (!threadsByWeek[weekNumber]) {
+            threadsByWeek[weekNumber] = [];
+        }
+        threadsByWeek[weekNumber].push(thread);
+    });
+
+    return threadsByWeek;
+}
+
+// Function to analyze threads by week
+function analyzeThreadsByWeek(threadsByWeek) {
+    for (const week in threadsByWeek) {
+        const threads = threadsByWeek[week];
+
+        console.log(`\n--- Week ${week} ---`);
+
+        // Sort threads by total reactions
+        const sortedByReactions = threads
+            .slice()
+            .sort((a, b) => b.totalReactions - a.totalReactions);
+
+        // Sort threads by message count
+        const sortedByMessages = threads
+            .slice()
+            .sort((a, b) => b.messageCount - a.messageCount);
+
+        console.log('Top threads by total reactions:');
+        sortedByReactions.forEach((thread, index) => {
+            console.log(
+                `${index + 1}. Thread: ${thread.threadName} (ID: ${thread.threadId})`
+            );
+            console.log(`   Total Reactions: ${thread.totalReactions}`);
+            console.log(`   Created On: ${thread.creationDate.toDateString()}`);
+            console.log(`   Link: ${thread.threadLink}`);
+        });
+
+        console.log('\nTop threads by message count:');
+        sortedByMessages.forEach((thread, index) => {
+            console.log(
+                `${index + 1}. Thread: ${thread.threadName} (ID: ${thread.threadId})`
+            );
+            console.log(`   Messages: ${thread.messageCount}`);
+            console.log(`   Created On: ${thread.creationDate.toDateString()}`);
+            console.log(`   Link: ${thread.threadLink}`);
+        });
+    }
+}
