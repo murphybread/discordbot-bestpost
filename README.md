@@ -6,6 +6,9 @@
         - 매주 변화량을 기준으로 합니다.
 
 
+discord scope
+- bot
+- applications.commands
 
 
 discord bot권한
@@ -17,6 +20,7 @@ discord bot권한
     - Manage Threads
     - Embed Links
     - Read Message History
+    - Add Reactions
 
 
 # Architecture 
