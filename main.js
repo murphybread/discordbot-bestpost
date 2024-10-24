@@ -1,7 +1,7 @@
 // main.js
 
 require('dotenv').config();
-const { client, getMetadata } = require('./getMetadata');
+const { client, getMetadata } = require('./getmetadata');
 const {
     readPreviousData,
     saveCurrentData,
@@ -9,29 +9,30 @@ const {
 } = require('./saveMetadata');
 const { compareData } = require('./compareMetadata');
 
-// Login to Discord with your token
-client.login(process.env.DISCORD_TOKEN);
+async function main() {
+    await client.login(process.env.DISCORD_TOKEN);
+    console.log('Discord 클라이언트 로그인 완료');
 
-// When the client is ready, run this code
-client.once('ready', async () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+    const fetchedData = await getMetadata();
+    console.log('가져온 데이터:', JSON.stringify(fetchedData, null, 2));
 
-    // Fetch and save thread metadata
-    const threadData = await getMetadata();
-
-    console.log('Thread data fetched:', threadData);
+    fetchedData.forEach(thread => {
+        console.log(`Thread: ${thread.threadName}, Author: ${thread.author}`);
+    });
 
     // Save the current data
-    saveCurrentData(threadData);
+    saveCurrentData(fetchedData);
 
     // Group threads by week
-    const threadsByWeek = groupThreadsByWeek(threadData);
+    const threadsByWeek = groupThreadsByWeek(fetchedData);
 
     // Analyze data per week
     analyzeThreadsByWeek(threadsByWeek);
 
     // ... existing code for comparison, if needed ...
-});
+}
+
+main().catch(console.error);
 
 // Function to group threads by week
 function groupThreadsByWeek(threadData) {
@@ -70,8 +71,9 @@ function analyzeThreadsByWeek(threadsByWeek) {
             console.log(
                 `${index + 1}. Thread: ${thread.threadName} (ID: ${thread.threadId})`
             );
+            console.log(`   Author: ${thread.author}`); // Log author (nickname)
             console.log(`   Total Reactions: ${thread.totalReactions}`);
-            console.log(`   Created On: ${thread.creationDate.toDateString()}`);
+            console.log(`   Created On: ${new Date(thread.creationDate).toDateString()}`);
             console.log(`   Link: ${thread.threadLink}`);
         });
 
@@ -80,8 +82,9 @@ function analyzeThreadsByWeek(threadsByWeek) {
             console.log(
                 `${index + 1}. Thread: ${thread.threadName} (ID: ${thread.threadId})`
             );
+            console.log(`   Author: ${thread.author}`); // Log author (nickname)
             console.log(`   Messages: ${thread.messageCount}`);
-            console.log(`   Created On: ${thread.creationDate.toDateString()}`);
+            console.log(`   Created On: ${new Date(thread.creationDate).toDateString()}`);
             console.log(`   Link: ${thread.threadLink}`);
         });
     }

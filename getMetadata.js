@@ -1,15 +1,17 @@
 // getMetadata.js
 
 require('dotenv').config();
-const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
+const { Client, GatewayIntentBits, ChannelType, Partials } = require('discord.js');
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
     ],
+    partials: [Partials.Channel, Partials.Message, Partials.Reaction],
 });
 
 module.exports = {
@@ -86,17 +88,10 @@ module.exports = {
                     `Thread ${thread.name} was created on ${creationDate.toDateString()}, Week ${weekNumber}`
                 );
 
-                // Add data to the array
-                threadData.push({
-                    threadId: thread.id,
-                    threadName: thread.name,
-                    threadLink: threadLink,
-                    creationDate: creationDate,
-                    weekNumber: weekNumber,
-                    mainPostReactions: mainPostReactions,
-                    messageCount: messageCount,
-                    totalReactions: totalReactions,
-                });
+                const threadMetadata = await getThreadMetadata(thread);
+                threadData.push(threadMetadata);
+
+                console.log('Thread metadata:', threadMetadata); // 디버깅을 위해 추가
             }
 
             return threadData;
@@ -173,4 +168,43 @@ function getWeekNumber(creationDate) {
 
     // If not found in any week, return 0 or undefined
     return 0;
+}
+
+async function getThreadMetadata(thread) {
+    const startDate = new Date('2024-10-22T00:00:00.000Z');
+    const threadCreatedAt = new Date(thread.createdAt);
+    const weekNumber = Math.floor((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
+
+    const messages = await thread.messages.fetch({ limit: 100 });
+    const mainPost = messages.last();
+    const mainPostReactions = mainPost.reactions.cache.reduce((acc, reaction) => acc + reaction.count, 0);
+
+    const totalReactions = messages.reduce((acc, message) =>
+        acc + message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0), 0);
+
+    let authorName = 'Unknown';
+    try {
+        const starterMessage = await thread.fetchStarterMessage();
+        if (starterMessage) {
+            authorName = starterMessage.author.username;
+        } else {
+            console.log('스레드 시작 메시지를 찾을 수 없습니다.');
+        }
+    } catch (error) {
+        console.error(`스레드 ${thread.id}의 시작 메시지를 가져오는 데 실패했습니다:`, error);
+    }
+
+    console.log(`스레드 ${thread.id}의 작성자:`, authorName);
+
+    return {
+        threadId: thread.id,
+        threadName: thread.name,
+        threadLink: `https://discord.com/channels/${thread.guild.id}/${thread.id}`,
+        creationDate: thread.createdAt.toISOString(),
+        weekNumber,
+        mainPostReactions,
+        messageCount: messages.size,
+        totalReactions,
+        author: authorName // 이 줄이 있는지 확인하세요
+    };
 }
