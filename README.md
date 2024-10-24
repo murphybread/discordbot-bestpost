@@ -11,12 +11,8 @@ discord scope
 discord bot권한
 - General Permissions
     - View Channels
-    - view Server Insight
 - Text Permissions
     - Send Messages
-    - Manage Messages
-    - Manage Threads
-    - Embed Links
     - Read Message History
     - Add Reactions
 
