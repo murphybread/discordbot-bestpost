@@ -214,17 +214,19 @@ async function getThreadMetadata(thread) {
     try {
         messages = await thread.messages.fetch({ limit: 100 });
     } catch (error) {
-        console.error(`Failed to fetch messages for thread ${thread.id}:`, error);
+        console.error(`Failed to fetch messages for thread ${thread.id}: ${error}`);
         messageFailed = true;
     }
 
-    const mainPost = !messageFailed ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
+    // console.log(`messages: ${JSON.stringify(Array.from(messages.values()), null, 2)}`);
+    console.log(`Object.keys(messages).length: ${Object.keys(messages).length} ,  messages.length:${messages.length},messages.size : ${messages.size}`)
+    const mainPost = !messageFailed && messages.size ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
 
-    const mainPostReactions = !messageFailed ?
+    const mainPostReactions = !messageFailed && messages.size ?
         mainPost.reactions.cache.reduce((acc, reaction) => acc + reaction.count, 0) :
         0;
 
-    const totalReactions = !messageFailed ?
+    const totalReactions = !messageFailed && messages.size ?
         messages.reduce((acc, message) =>
             acc + message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0), 0) :
         0
@@ -239,7 +241,7 @@ async function getThreadMetadata(thread) {
         }
     } catch (error) {
         console.error(`스레드 ${thread.id}의 시작 메시지를 가져오는 데 실패했습니다:`, error);
-        // Mocking starterMessage in case of failure
+        // Mocking starterMessage in case of failureㅎ
         starterMessage = {
             author: { username: "Unknown Author" },
             reactions: { cache: new Map() },
