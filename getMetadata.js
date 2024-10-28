@@ -209,27 +209,25 @@ async function getThreadMetadata(thread) {
     const threadCreatedAt = new Date(thread.createdAt);
     const weekNumber = Math.ceil((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
 
-    let messages;
+
+    let messageFailed = false;
     try {
         messages = await thread.messages.fetch({ limit: 100 });
     } catch (error) {
         console.error(`Failed to fetch messages for thread ${thread.id}:`, error);
-        // Mocking messages as an empty array
-        messages = [];
+        messageFailed = true;
     }
 
-    const mainPost = messages.length > 0 ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
+    const mainPost = !messageFailed ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
 
-    const mainPostReactions = mainPost.reactions.cache.size > 0 ?
+    const mainPostReactions = !messageFailed ?
         mainPost.reactions.cache.reduce((acc, reaction) => acc + reaction.count, 0) :
         0;
 
-    const totalReactions = messages.length > 0 // Check if messages is not empty
-        ? messages.reduce((acc, message) =>
-            acc + (message.reactions && message.reactions.cache
-                ? message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0)
-                : 0), 0)
-        : 0;
+    const totalReactions = !messageFailed ?
+        messages.reduce((acc, message) =>
+            acc + message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0), 0) :
+        0
 
     let authorName = 'Unknown';
     try {
