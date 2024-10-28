@@ -41,6 +41,8 @@ module.exports = {
 
             for (const thread of threads.values()) {
                 console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
+                console.log(`${i}번째 쓰레드\n`);
+
 
                 // Fetch the starter message (main post) within try-catch
                 let starterMessage;
@@ -48,19 +50,26 @@ module.exports = {
                     starterMessage = await thread.fetchStarterMessage();
                 } catch (error) {
                     console.error(`Failed to fetch starter message for thread ${thread.name}:`, error.message);
-                    continue; // Skip to the next thread
+                    starterMessage = {
+                        content: "이 스레드의 시작 메시지를 가져오지 못했습니다.", // Dummy message content
+                        author: { username: "Unknown Author" }, // Dummy author
+                        reactions: {
+                            cache: new Map([]), // Initialize reactions as an empty Map
+                        },
+                    };
                 }
 
                 if (!starterMessage) {
                     console.log(`Could not fetch starter message for thread ${thread.name}`);
-                    continue; // Skip to the next thread if still undefined
                 }
 
                 // Get the number of reactions on the starter message
-                const mainPostReactions = starterMessage.reactions.cache.reduce(
-                    (acc, reaction) => acc + reaction.count,
-                    0
-                );
+                const mainPostReactions = starterMessage.reactions.cache.size > 0
+                    ? Array.from(starterMessage.reactions.cache.values()).reduce(
+                        (acc, reaction) => acc + reaction.count,
+                        0
+                    )
+                    : 0;
 
                 console.log(`Main post reactions in thread ${thread.name}: ${mainPostReactions}`);
 
@@ -102,13 +111,18 @@ module.exports = {
                 threadData.push(threadMetadata);
 
                 console.log('Thread metadata:', threadMetadata); // 디버깅을 위해 추가
-                console.log(`${i++}번째 쓰레드\n`);
 
-                // 10개의 스레드마다 데이터를 임시 저장
+                // Save every 10 threads
                 if (i % 10 === 0) {
-                    saveTempData(threadData, batchIndex++);
-                    threadData.length = 0; // 임시 저장 후 배열 초기화
+                    const batchData = threadData.slice((batchIndex - 1) * 10, batchIndex * 10); // Get the last 10 threads
+                    saveTempData(batchData, batchIndex++); // Save the batch
                 }
+                else if ((i >= thread.size) && (thread.size % 10 !== 0)) {
+                    const batchData = threadData.slice(i * 10, thread.size); // Get the last 10 threads
+                    saveTempData(batchData, batchIndex++); // Save the batch
+
+                }
+                i++;
             }
 
             return threadData;
@@ -195,12 +209,27 @@ async function getThreadMetadata(thread) {
     const threadCreatedAt = new Date(thread.createdAt);
     const weekNumber = Math.ceil((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
 
-    const messages = await thread.messages.fetch({ limit: 100 });
-    const mainPost = messages.last();
-    const mainPostReactions = mainPost.reactions.cache.reduce((acc, reaction) => acc + reaction.count, 0);
+    let messages;
+    try {
+        messages = await thread.messages.fetch({ limit: 100 });
+    } catch (error) {
+        console.error(`Failed to fetch messages for thread ${thread.id}:`, error);
+        // Mocking messages as an empty array
+        messages = [];
+    }
 
-    const totalReactions = messages.reduce((acc, message) =>
-        acc + message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0), 0);
+    const mainPost = messages.length > 0 ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
+
+    const mainPostReactions = mainPost.reactions.cache.size > 0 ?
+        mainPost.reactions.cache.reduce((acc, reaction) => acc + reaction.count, 0) :
+        0;
+
+    const totalReactions = messages.length > 0 // Check if messages is not empty
+        ? messages.reduce((acc, message) =>
+            acc + (message.reactions && message.reactions.cache
+                ? message.reactions.cache.reduce((reactionAcc, reaction) => reactionAcc + reaction.count, 0)
+                : 0), 0)
+        : 0;
 
     let authorName = 'Unknown';
     try {
@@ -212,9 +241,13 @@ async function getThreadMetadata(thread) {
         }
     } catch (error) {
         console.error(`스레드 ${thread.id}의 시작 메시지를 가져오는 데 실패했습니다:`, error);
+        // Mocking starterMessage in case of failure
+        starterMessage = {
+            author: { username: "Unknown Author" },
+            reactions: { cache: new Map() },
+        };
+        authorName = starterMessage.author.username;
     }
-
-    console.log(`스레드 ${thread.id}의 작성자:`, authorName);
 
     return {
         threadId: thread.id,
@@ -223,8 +256,7 @@ async function getThreadMetadata(thread) {
         creationDate: thread.createdAt.toISOString(),
         weekNumber,
         mainPostReactions,
-        messageCount: messages.size,
         totalReactions,
-        author: authorName // 이 줄이 있는지 확인하세요
+        author: authorName,
     };
 }

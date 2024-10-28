@@ -23,13 +23,14 @@ async function main() {
     // Save the current data
     saveCurrentData(fetchedData);
 
-    // Group threads by week
-    const threadsByWeek = groupThreadsByWeek(fetchedData);
+    // // Group threads by week
+    // const threadsByWeek = groupThreadsByWeek(fetchedData);
 
-    // Analyze data per week
-    analyzeThreadsByWeek(threadsByWeek);
+    // // Analyze data per week
+    // analyzeThreadsByWeek(threadsByWeek);
 
     // ... existing code for comparison, if needed ...
+    console.log(`채널 데이터 수집이완료됐습니다.`)
 }
 
 main().catch(console.error);
