@@ -42,11 +42,18 @@ module.exports = {
             for (const thread of threads.values()) {
                 console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
 
-                // Fetch the starter message (main post)
-                const starterMessage = await thread.fetchStarterMessage();
+                // Fetch the starter message (main post) within try-catch
+                let starterMessage;
+                try {
+                    starterMessage = await thread.fetchStarterMessage();
+                } catch (error) {
+                    console.error(`Failed to fetch starter message for thread ${thread.name}:`, error.message);
+                    continue; // Skip to the next thread
+                }
+
                 if (!starterMessage) {
                     console.log(`Could not fetch starter message for thread ${thread.name}`);
-                    continue;
+                    continue; // Skip to the next thread if still undefined
                 }
 
                 // Get the number of reactions on the starter message
@@ -106,8 +113,11 @@ module.exports = {
 
             return threadData;
         } catch (error) {
-            console.log('Failed to fetch threads:', error.message);
-            return [];
+            console.error(`Failed to fetch threads:`, error.message);
+            console.error('Stack trace:', error.stack);  // 에러 스택 확인
+            if (error.rawError) {
+                console.error('Raw error details:', JSON.stringify(error.rawError, null, 2)); // Discord에서 제공하는 원시 에러
+            }
         }
     },
 };
@@ -181,9 +191,9 @@ function getWeekNumber(creationDate) {
 }
 
 async function getThreadMetadata(thread) {
-    const startDate = new Date('2024-10-27T00:00:00.000Z');
+    const startDate = new Date('2024-10-15T00:00:00.000Z');
     const threadCreatedAt = new Date(thread.createdAt);
-    const weekNumber = Math.floor((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
 
     const messages = await thread.messages.fetch({ limit: 100 });
     const mainPost = messages.last();
