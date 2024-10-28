@@ -255,6 +255,7 @@ async function getThreadMetadata(thread) {
         weekNumber,
         mainPostReactions,
         totalReactions,
+        messageCount: messages.size,
         author: authorName,
     };
 }
