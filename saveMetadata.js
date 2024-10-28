@@ -31,8 +31,9 @@ function readPreviousData() {
 
 function saveCurrentData(threadData) {
     try {
+        console.log(`+++++++++++++++++ start saveCurrentData ++++++++++++++++ `)
         fs.writeFileSync(currentDataPath, JSON.stringify(threadData, null, 2));
-        console.log('Current thread data saved successfully.');
+        console.log('------------------- Current thread data saved successfully.----------------');
     } catch (err) {
         console.error('Error saving current thread data:', err);
     }
@@ -47,8 +48,26 @@ function updatePreviousData(threadData) {
     }
 }
 
+const tempDir = path.join(__dirname, 'temp');
+
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir);
+}
+
+function saveTempData(threadData, batchIndex) {
+    const tempDataPath = path.join(tempDir, `tempThreadData_${batchIndex}.json`);
+    try {
+        console.log(`+++++++++++++++++ start saving temp data for batch ${batchIndex} ++++++++++++++++`);
+        fs.writeFileSync(tempDataPath, JSON.stringify(threadData, null, 2));
+        console.log(`------------------- Temp thread data for batch ${batchIndex} saved successfully. ----------------`);
+    } catch (err) {
+        console.error(`Error saving temp data for batch ${batchIndex}:`, err);
+    }
+}
+
 module.exports = {
     readPreviousData,
     saveCurrentData,
     updatePreviousData,
+    saveTempData,
 };
