@@ -2,6 +2,7 @@
 
 require('dotenv').config();
 const { Client, GatewayIntentBits, ChannelType, Partials } = require('discord.js');
+const { saveTempData } = require('./saveMetadata');
 
 const client = new Client({
     intents: [
@@ -35,9 +36,11 @@ module.exports = {
             console.log(`Successfully fetched ${threads.size} active threads in forum channel.`);
 
             const threadData = [];
+            let batchIndex = 1;
+            let i = 1;
 
             for (const thread of threads.values()) {
-                console.log(`Processing thread: ${thread.name} (ID: ${thread.id})`);
+                console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
 
                 // Fetch the starter message (main post)
                 const starterMessage = await thread.fetchStarterMessage();
@@ -92,6 +95,13 @@ module.exports = {
                 threadData.push(threadMetadata);
 
                 console.log('Thread metadata:', threadMetadata); // 디버깅을 위해 추가
+                console.log(`${i++}번째 쓰레드\n`);
+
+                // 10개의 스레드마다 데이터를 임시 저장
+                if (i % 10 === 0) {
+                    saveTempData(threadData, batchIndex++);
+                    threadData.length = 0; // 임시 저장 후 배열 초기화
+                }
             }
 
             return threadData;
@@ -171,7 +181,7 @@ function getWeekNumber(creationDate) {
 }
 
 async function getThreadMetadata(thread) {
-    const startDate = new Date('2024-10-22T00:00:00.000Z');
+    const startDate = new Date('2024-10-27T00:00:00.000Z');
     const threadCreatedAt = new Date(thread.createdAt);
     const weekNumber = Math.floor((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
 
