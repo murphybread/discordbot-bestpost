@@ -33,7 +33,11 @@ module.exports = {
             const fetchedThreads = await channel.threads.fetchActive();
             const threads = fetchedThreads.threads;
 
-            console.log(`Successfully fetched ${threads.size} active threads in forum channel.`);
+            // Fetch Archieved
+            const fetchedArchivedThreads = await channel.threads.fetchArchived();
+
+
+            console.log(`Successfully fetched ${threads.size} active threads in forum channel.\nArchieved channel ${fetchedArchivedThreads.threads.size}`);
 
             const threadData = [];
             let batchIndex = 1;
