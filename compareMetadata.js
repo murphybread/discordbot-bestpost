@@ -48,23 +48,22 @@ function saveBest5PostsFormatted(week) {
         return;
     }
 
-    let formattedContent = '';
+    // JSON 형식의 데이터로 변환
+    const formattedData = top5Data.map(post => ({
+        게시물제목: post.threadName,
+        총_이모지_리액션_수: post.totalReactions,
+        총_메시지_수: post.messageCount,
+        링크: post.threadLink
+    }));
 
-    top5Data.forEach(post => {
-        formattedContent += `
-        게시물제목: ${post.threadName}
-        총 이모지 리액션 수: ${post.totalReactions}
-        총 메시지 수: ${post.messageCount}
-        링크: ${post.threadLink}\n
-        `;
-    });
-
+    // JSON 형식으로 파일 저장
     try {
-        fs.writeFileSync(outputPath, formattedContent);
-        console.log(`Successfully saved formatted top 5 posts in ${week} folder!`);
+        fs.writeFileSync(outputPath, JSON.stringify(formattedData, null, 2)); // JSON 형식으로 저장
+        console.log(`Successfully saved formatted top 5 posts in ${week} folder as JSON!`);
     } catch (err) {
         console.error(`Error writing formatted top 5 posts to ${week}:`, err);
     }
 }
+
 
 saveBest5PostsFormatted(weekFolder);
