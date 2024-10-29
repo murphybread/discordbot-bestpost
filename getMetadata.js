@@ -169,33 +169,36 @@ function sleep(ms) {
 
 // Function to determine the week number based on the creation date
 function getWeekNumber(creationDate) {
-    // Define your weekly intervals
+    // KST 시간으로 변환
+    const kstCreationDate = new Date(creationDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+
+    // Define your weekly intervals based on KST
     const weeks = [
         {
             weekNumber: 1,
-            startDate: new Date('2023-10-15T00:00:00'), // Adjust the year and date as needed
-            endDate: new Date('2023-10-21T23:59:59'),
+            startDate: new Date('2023-10-15T00:00:00+09:00'), // KST 기준 시작 시간
+            endDate: new Date('2023-10-21T23:59:59+09:00'),   // KST 기준 종료 시간
         },
         {
             weekNumber: 2,
-            startDate: new Date('2023-10-22T00:00:00'),
-            endDate: new Date('2023-10-28T23:59:59'),
+            startDate: new Date('2023-10-22T00:00:00+09:00'),
+            endDate: new Date('2023-10-28T23:59:59+09:00'),
         },
         {
             weekNumber: 3,
-            startDate: new Date('2023-10-29T00:00:00'),
-            endDate: new Date('2023-11-04T23:59:59'),
+            startDate: new Date('2023-10-29T00:00:00+09:00'),
+            endDate: new Date('2023-11-04T23:59:59+09:00'),
         },
         {
             weekNumber: 4,
-            startDate: new Date('2023-11-05T00:00:00'),
-            endDate: new Date('2023-11-11T23:59:59'),
+            startDate: new Date('2023-11-05T00:00:00+09:00'),
+            endDate: new Date('2023-11-11T23:59:59+09:00'),
         },
     ];
 
     // Iterate over the weeks to find where the creationDate falls
     for (const week of weeks) {
-        if (creationDate >= week.startDate && creationDate <= week.endDate) {
+        if (new Date(kstCreationDate) >= week.startDate && new Date(kstCreationDate) <= week.endDate) {
             return week.weekNumber;
         }
     }
@@ -205,9 +208,10 @@ function getWeekNumber(creationDate) {
 }
 
 async function getThreadMetadata(thread) {
-    const startDate = new Date('2024-10-15T00:00:00.000Z');
+    const startDate = new Date('2024-10-15T00:00:00.00+09:00');
     const threadCreatedAt = new Date(thread.createdAt);
     const weekNumber = Math.ceil((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
+    const threadCreatedAtKST = threadCreatedAt.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
 
     let messageFailed = false;
@@ -253,7 +257,7 @@ async function getThreadMetadata(thread) {
         threadId: thread.id,
         threadName: thread.name,
         threadLink: `https://discord.com/channels/${thread.guild.id}/${thread.id}`,
-        creationDate: thread.createdAt.toISOString(),
+        creationDate: threadCreatedAtKST,
         weekNumber,
         mainPostReactions,
         totalReactions,
