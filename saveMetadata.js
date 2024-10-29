@@ -11,6 +11,62 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
 
+
+// Function to group threads by week
+function groupThreadsByWeek(threadData) {
+    const threadsByWeek = {};
+
+    threadData.forEach((thread) => {
+        const weekNumber = thread.weekNumber || 0;
+        if (!threadsByWeek[weekNumber]) {
+            threadsByWeek[weekNumber] = [];
+        }
+        threadsByWeek[weekNumber].push(thread);
+    });
+
+    return threadsByWeek;
+}
+
+// Function to group threads by week and write to respective folders
+function groupThreadsByWeekAndSave() {
+    // 파일 읽기
+    fs.readFile(currentDataPath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return;
+        }
+
+        // JSON 데이터 파싱
+        const threadData = JSON.parse(data);
+
+        // 주차별 스레드를 그룹화
+        const threadsByWeek = groupThreadsByWeek(threadData);
+
+        // 주차별로 폴더에 파일 저장
+        Object.keys(threadsByWeek).forEach((weekNumber) => {
+            const weekFolderName = `week${weekNumber}`; // week1, week2 같은 폴더명
+            const weekFolderPath = path.join(dataDir, weekFolderName);
+
+            // 폴더가 없으면 생성
+            if (!fs.existsSync(weekFolderPath)) {
+                fs.mkdirSync(weekFolderPath);
+            }
+
+            // 해당 주차의 데이터를 저장할 파일 경로
+            const filePath = path.join(weekFolderPath, `${weekFolderName}-threads.json`);
+
+            // 데이터를 파일로 저장
+            fs.writeFile(filePath, JSON.stringify(threadsByWeek[weekNumber], null, 2), (err) => {
+                if (err) {
+                    console.error(`Error writing to file for week ${weekNumber}:`, err);
+                } else {
+                    console.log(`Successfully wrote data for week ${weekNumber}`);
+                }
+            });
+        });
+    });
+}
+
 function readPreviousData() {
     let previousData = [];
 
@@ -70,4 +126,5 @@ module.exports = {
     saveCurrentData,
     updatePreviousData,
     saveTempData,
+    groupThreadsByWeekAndSave,
 };

@@ -6,10 +6,12 @@ const {
     readPreviousData,
     saveCurrentData,
     updatePreviousData,
+    groupThreadsByWeekAndSave,
 } = require('./saveMetadata');
 const { compareData } = require('./compareMetadata');
 
 async function main() {
+
     await client.login(process.env.DISCORD_TOKEN);
     console.log('Discord 클라이언트 로그인 완료');
 
@@ -30,25 +32,14 @@ async function main() {
     // analyzeThreadsByWeek(threadsByWeek);
 
     // ... existing code for comparison, if needed ...
+    groupThreadsByWeekAndSave();
+
     console.log(`채널 데이터 수집이완료됐습니다.`)
 }
 
 main().catch(console.error);
 
-// Function to group threads by week
-function groupThreadsByWeek(threadData) {
-    const threadsByWeek = {};
 
-    threadData.forEach((thread) => {
-        const weekNumber = thread.weekNumber || 0;
-        if (!threadsByWeek[weekNumber]) {
-            threadsByWeek[weekNumber] = [];
-        }
-        threadsByWeek[weekNumber].push(thread);
-    });
-
-    return threadsByWeek;
-}
 
 // Function to analyze threads by week
 function analyzeThreadsByWeek(threadsByWeek) {
