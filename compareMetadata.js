@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const dataDir = path.join(__dirname, 'data');
+const weekFolder = 'week2';  // You can change this to 'week2', 'week3', etc.
+const weekFile = `${weekFolder}-threads.json`;  // File name based on weekFolder
 
 function getPath(directoryName, fileName) {
     return path.join(__dirname, 'data', directoryName, fileName);
@@ -33,13 +35,8 @@ function saveTop5Posts(threadData, weekFolder) {
 }
 
 // 비동기적으로 파일을 읽어온 후 저장하는 방식
-const weekFile = 'week1-threads.json';  // 읽을 파일 이름
-fs.readFile(getPath("week1", weekFile), 'utf-8', (err, data) => {
-    if (err) {
-        console.error('Error reading file:', err);
-        return;
-    }
+const data = fs.readFileSync(getPath(weekFolder, weekFile), 'utf-8');
+const threadData = JSON.parse(data);
+saveTop5Posts(threadData, weekFolder);
 
-    const threadData = JSON.parse(data); // JSON 데이터를 파싱
-    saveTop5Posts(threadData, "week1");  // 저장할 때 다른 파일명 사용
-});
+
