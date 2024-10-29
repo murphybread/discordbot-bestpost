@@ -9,7 +9,8 @@
 - 시간대 기준 확인하기. (기본값 UTC 추정, KST로 통일하기) ✅
 - daily  데이터 수집 프로세스 📝
 - data 추출해서 이번주 게시물로 저장하기 ✅
-- week데이터에서 best게시물 top5 선정하기 🛠️
+- week데이터에서 best게시물 top5 선정하기 ✅
+    - best 5게시물 보기좋게 이름, 총 리액션, 메시지 수 링크 정리 📝
 
 discord scope
 - bot
