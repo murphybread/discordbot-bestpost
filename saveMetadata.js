@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const dataDir = path.join(__dirname, 'data');
+const channelDir = path.join(__dirname, 'channels');
 const previousDataPath = path.join(dataDir, 'previousThreadData.json');
 const currentDataPath = path.join(dataDir, 'currentThreadData.json');
 
@@ -16,44 +17,41 @@ function sanitizeFolderName(name) {
 }
 
 
-// Function to group threads by week
-function groupThreadsByWeek(threadData) {
-    const threadsByWeek = {};
+// Function to group threads by week and write to respective folders
+function saveThreadsByWeekAndChannel(threads) {
+    const threadsByWeekAndChannel = {};
 
-    threadData.forEach((thread) => {
-        const weekNumber = thread.weekNumber || 0;
-        if (!threadsByWeek[weekNumber]) {
-            threadsByWeek[weekNumber] = [];
+    // 주차별로 스레드를 그룹화
+    threads.forEach((thread) => {
+        const weekNumber = thread.weekNumber;
+        const channelName = thread.channelName;
+        const sanitizedChannelName = sanitizeFolderName(channelName); // 채널 이름을 안전하게 변환
+
+        // 주차별로 채널 내 스레드를 그룹화
+        if (!threadsByWeekAndChannel[weekNumber]) {
+            threadsByWeekAndChannel[weekNumber] = {};
         }
-        threadsByWeek[weekNumber].push(thread);
+        if (!threadsByWeekAndChannel[weekNumber][sanitizedChannelName]) {
+            threadsByWeekAndChannel[weekNumber][sanitizedChannelName] = [];
+        }
+
+        threadsByWeekAndChannel[weekNumber][sanitizedChannelName].push(thread);
     });
 
-    return threadsByWeek;
-}
-
-// Function to group threads by week and write to respective folders
-function groupThreadsByWeekAndSave() {
-    fs.readFile(currentDataPath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        const threadData = JSON.parse(data);
-        const threadsByWeek = groupThreadsByWeek(threadData);
-
-        Object.keys(threadsByWeek).forEach((weekNumber) => {
+    // 그룹화된 스레드들을 저장
+    Object.keys(threadsByWeekAndChannel).forEach((weekNumber) => {
+        Object.keys(threadsByWeekAndChannel[weekNumber]).forEach((sanitizedChannelName) => {
             const weekFolderName = `week${weekNumber}`;
-            const sanitizedChannelName = sanitizeFolderName(threadData[0].channelName); // 채널 이름을 안전하게 변환
             const channelFolderPath = path.join(dataDir, `channel_${sanitizedChannelName}`, weekFolderName);
 
             if (!fs.existsSync(channelFolderPath)) {
                 fs.mkdirSync(channelFolderPath, { recursive: true }); // 폴더가 없으면 생성
             }
 
-            const filePath = path.join(channelFolderPath, `${weekFolderName}-threads.json`);
+            const filePath = path.join(channelFolderPath, `${weekFolderName}-${sanitizedChannelName}.json`);
+            const threadsToWrite = threadsByWeekAndChannel[weekNumber][sanitizedChannelName];
 
-            fs.writeFile(filePath, JSON.stringify(threadsByWeek[weekNumber], null, 2), (err) => {
+            fs.writeFile(filePath, JSON.stringify(threadsToWrite, null, 2), (err) => {
                 if (err) {
                     console.error(`Error writing to file for week ${weekNumber}:`, err);
                 } else {
@@ -64,24 +62,31 @@ function groupThreadsByWeekAndSave() {
     });
 }
 
-function readPreviousData() {
-    let previousData = [];
+// Function to save all threads by channel in channel/channelName.json
+function saveThreadsByChannel(thread) {
+    const sanitizedChannelName = sanitizeFolderName(thread[0].channelName); // 첫 번째 스레드에서 채널 이름을 추출
+    const channelFolderPath = path.join(channelDir, `channel_${sanitizedChannelName}`);
+    const filePath = path.join(channelFolderPath, `${sanitizedChannelName}.json`);
 
-    try {
-        if (fs.existsSync(previousDataPath)) {
-            const data = fs.readFileSync(previousDataPath, 'utf-8');
-            previousData = JSON.parse(data);
-            console.log('Previous thread data loaded successfully.');
-        } else {
-            console.log('No previous thread data found. Starting fresh.');
-        }
-    } catch (err) {
-        console.error('Error reading previous thread data:', err);
+    if (!fs.existsSync(channelFolderPath)) {
+        fs.mkdirSync(channelFolderPath, { recursive: true }); // 폴더가 없으면 생성
     }
 
-    return previousData;
+    // 받은 데이터를 통째로 JSON 파일로 저장
+    fs.writeFile(filePath, JSON.stringify(thread, null, 2), (err) => {
+        if (err) {
+            console.error(`Error writing to file for channel ${sanitizedChannelName}:`, err);
+        } else {
+            console.log(`Successfully wrote data for channel ${sanitizedChannelName}`);
+        }
+    });
 }
 
+
+// Helper function to sanitize folder names
+function sanitizeFolderName(name) {
+    return name.replace(/[<>:"/\\|?*]+/g, '_'); // 특수문자 변환
+}
 function saveCurrentData(threadData) {
     try {
         console.log(`+++++++++++++++++ start saveCurrentData ++++++++++++++++ `)
@@ -119,9 +124,9 @@ function saveTempData(threadData, batchIndex) {
 }
 
 module.exports = {
-    readPreviousData,
     saveCurrentData,
     updatePreviousData,
     saveTempData,
-    groupThreadsByWeekAndSave,
+    saveThreadsByWeekAndChannel,
+    saveThreadsByChannel,
 };

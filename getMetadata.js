@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 const { Client, GatewayIntentBits, ChannelType, Partials } = require('discord.js');
-const { saveTempData, groupThreadsByWeekAndSave } = require('./saveMetadata');
+const { saveTempData, saveThreadsByWeekAndChannel, saveThreadsByChannel } = require('./saveMetadata');
 
 const client = new Client({
     intents: [
@@ -97,6 +97,7 @@ module.exports = {
                     i++;
                 }
 
+                saveThreadsByChannel(threadData);
                 // 각 채널 json 저장
                 groupThreadsByWeekAndSave(threadData)
                 // 각 채널의 스레드 데이터를 allThreadData에 추가
