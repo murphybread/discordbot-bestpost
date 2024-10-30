@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs').promises;
 const path = require('path');
+require('dotenv').config();
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -68,30 +69,29 @@ module.exports = {
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
                 title: `${channel} 채널의 ${week} 추천 게시물 TOP 5`,
-                description: '가장 많은 반응과 댓글을 받은 게시물들입니다.',
-                fields: posts.map((post, index) => ({
-                    name: `${index + 1}위: ${post.게시물제목}`,
-                    value: [
-                        `👍 반응: ${post.총_이모지_리액션_수}`,
-                        `💬 댓글: ${post.총_메시지_수}`,
-                        `✍️ 작성자: ${post.작성자}`,
-                        `🔗 [게시물 바로가기](${post.링크})`
-                    ].join('\n')
-                })),
+                description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n 문의 링크 <@${process.env.USER_ID}>`,
+                name: `${index + 1}위: ${post.게시물제목}`,
+                value: [
+                    `👍 반응: ${post.총_이모지_리액션_수}`,
+                    `💬 댓글: ${post.총_메시지_수}`,
+                    `✍️ 작성자: ${post.작성자}`,
+                    `🔗 [게시물 바로가기](${post.링크})`
+                ].join('\n')
+            })),
                 timestamp: new Date(),
-                footer: {
-                    text: '디스코드 도서관 | 매주 업데이트'
-                }
-            };
+                    footer: {
+                text: '디스코드 도서관 | 매주 업데이트'
+            }
+        };
 
-            await interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed] });
 
-        } catch (error) {
-            console.error('Error:', error);
-            await interaction.reply({
-                content: '데이터를 불러오는 중 오류가 발생했습니다.',
-                ephemeral: true
-            });
-        }
-    },
+    } catch(error) {
+        console.error('Error:', error);
+        await interaction.reply({
+            content: '데이터를 불러오는 중 오류가 발생했습니다.',
+            ephemeral: true
+        });
+    }
+},
 }; 
