@@ -14,7 +14,8 @@
 - 봇커맨드 입력에 따라 오늘 괜찮은 게시물 추천받기 ✅
 - 토론하기 이외에 여러채널 데이터 저장하기 ✅
 - best게시물까지 저장하기 ✅
-
+- Breadking Point 증가량 비교 로직 📝
+- 매일 업데이트되는 금일의 추천 best command 만들기 📝
 discord scope
     [✓] bot
     [✓] applications.commands
