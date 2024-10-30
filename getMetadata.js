@@ -99,7 +99,7 @@ module.exports = {
 
                 saveThreadsByChannel(threadData);
                 // 각 채널 json 저장
-                groupThreadsByWeekAndSave(threadData)
+                saveThreadsByWeekAndChannel(threadData)
                 // 각 채널의 스레드 데이터를 allThreadData에 추가
                 allThreadData.push(...threadData);
             }
