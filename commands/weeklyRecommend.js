@@ -21,9 +21,9 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                     { name: '0주차', value: 'week0' },
-                    { name: '1주차', value: 'week1' },
-                    { name: '2주차', value: 'week2' },
-                    { name: '3주차', value: 'week3' },
+                    { name: '1주차 10.15~10.21', value: 'week1' },
+                    { name: '2주차 10.22~10.28', value: 'week2' },
+                    { name: '3주차 10.29~11.05', value: 'week3' },
                 )),
 
     async execute(interaction) {
@@ -68,7 +68,7 @@ module.exports = {
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
                 title: `${channel} 채널의 ${week} 추천 게시물 TOP 5`,
-                description: '가장 많은 반응과 댓글을 받은 게시물들입니다.',
+                description: '가장 많은 반응과 댓글을 받은 게시물들입니다.\n 문의 링크 <@534738759527432192>',
                 fields: posts.map((post, index) => ({
                     name: `${index + 1}위: ${post.게시물제목}`,
                     value: [
@@ -80,7 +80,7 @@ module.exports = {
                 })),
                 timestamp: new Date(),
                 footer: {
-                    text: '디스코드 도서관 | 매주 업데이트'
+                    text: '작성자 [FE] 민찬 | 계속 업데이트 예정'
                 }
             };
 
