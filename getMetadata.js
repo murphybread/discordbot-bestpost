@@ -148,46 +148,6 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Function to determine the week number based on the creation date
-function getWeekNumber(creationDate) {
-    // KST 시간으로 변환
-    const kstCreationDate = new Date(creationDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-
-    // Define your weekly intervals based on KST
-    const weeks = [
-        {
-            weekNumber: 1,
-            startDate: new Date('2023-10-15T00:00:00+09:00'), // KST 기준 시작 시간
-            endDate: new Date('2023-10-21T23:59:59+09:00'),   // KST 기준 종료 시간
-        },
-        {
-            weekNumber: 2,
-            startDate: new Date('2023-10-22T00:00:00+09:00'),
-            endDate: new Date('2023-10-28T23:59:59+09:00'),
-        },
-        {
-            weekNumber: 3,
-            startDate: new Date('2023-10-29T00:00:00+09:00'),
-            endDate: new Date('2023-11-04T23:59:59+09:00'),
-        },
-        {
-            weekNumber: 4,
-            startDate: new Date('2023-11-05T00:00:00+09:00'),
-            endDate: new Date('2023-11-11T23:59:59+09:00'),
-        },
-    ];
-
-    // Iterate over the weeks to find where the creationDate falls
-    for (const week of weeks) {
-        if (new Date(kstCreationDate) >= week.startDate && new Date(kstCreationDate) <= week.endDate) {
-            return week.weekNumber;
-        }
-    }
-
-    // If not found in any week, return 0 or undefined
-    return 0;
-}
-
 async function getThreadMetadata(thread) {
     const startDate = new Date('2024-10-15T00:00:00.00+09:00');
     const threadCreatedAt = new Date(thread.createdAt);
@@ -248,3 +208,4 @@ async function getThreadMetadata(thread) {
         author: authorName,
     };
 }
+
