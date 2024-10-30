@@ -11,6 +11,10 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir);
 }
 
+function sanitizeFolderName(name) {
+    return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, ''); // 파일 시스템에서 허용되지 않는 문자 제거
+}
+
 
 // Function to group threads by week
 function groupThreadsByWeek(threadData) {
@@ -29,39 +33,31 @@ function groupThreadsByWeek(threadData) {
 
 // Function to group threads by week and write to respective folders
 function groupThreadsByWeekAndSave() {
-    // 파일 읽기
     fs.readFile(currentDataPath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading file:', err);
             return;
         }
 
-        // JSON 데이터 파싱
         const threadData = JSON.parse(data);
-
-        // 주차별 스레드를 그룹화
         const threadsByWeek = groupThreadsByWeek(threadData);
 
-        // 주차별로 폴더에 파일 저장
         Object.keys(threadsByWeek).forEach((weekNumber) => {
-            const weekFolderName = `week${weekNumber}`; // week1, week2 같은 폴더명
-            const weekFolderPath = path.join(dataDir, weekFolderName);
-
-            const channelFolderPath = path.join(dataDir, 'channel_' + threadData[0].channelName, `week${weekNumber}`); // 예시
+            const weekFolderName = `week${weekNumber}`;
+            const sanitizedChannelName = sanitizeFolderName(threadData[0].channelName); // 채널 이름을 안전하게 변환
+            const channelFolderPath = path.join(dataDir, `channel_${sanitizedChannelName}`, weekFolderName);
 
             if (!fs.existsSync(channelFolderPath)) {
-                fs.mkdirSync(channelFolderPath);
+                fs.mkdirSync(channelFolderPath, { recursive: true }); // 폴더가 없으면 생성
             }
 
-            // 해당 주차의 데이터를 저장할 파일 경로
             const filePath = path.join(channelFolderPath, `${weekFolderName}-threads.json`);
 
-            // 데이터를 파일로 저장
             fs.writeFile(filePath, JSON.stringify(threadsByWeek[weekNumber], null, 2), (err) => {
                 if (err) {
                     console.error(`Error writing to file for week ${weekNumber}:`, err);
                 } else {
-                    console.log(`Successfully wrote data for week ${weekNumber}`);
+                    console.log(`Successfully wrote data for week ${weekNumber} in channel ${sanitizedChannelName}`);
                 }
             });
         });

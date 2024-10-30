@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 const { Client, GatewayIntentBits, ChannelType, Partials } = require('discord.js');
-const { saveTempData } = require('./saveMetadata');
+const { saveTempData, groupThreadsByWeekAndSave } = require('./saveMetadata');
 
 const client = new Client({
     intents: [
@@ -47,7 +47,7 @@ module.exports = {
 
                 for (const thread of threads.values()) {
                     console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
-                    console.log(`${i}번째 쓰레드\n 총 ${threads.size}`);
+                    console.log(`${i}번째 쓰레드 총 ${threads.size} \n`);
 
                     // Fetch the starter message (main post)
                     let starterMessage;
@@ -84,23 +84,8 @@ module.exports = {
                         totalReactions += reactionCount;
                     }
 
-                    const threadLink = `https://discord.com/channels/${thread.guild.id}/${thread.id}`;
-                    const creationDate = thread.createdAt;
-                    const weekNumber = getWeekNumber(creationDate);
 
-                    const threadMetadata = {
-                        channelId: channel.id,
-                        channelName: channel.name,
-                        threadId: thread.id,
-                        threadName: thread.name,
-                        threadLink: threadLink,
-                        creationDate: creationDate,
-                        weekNumber: weekNumber,
-                        mainPostReactions: mainPostReactions,
-                        totalReactions: totalReactions,
-                        messageCount: messageCount,
-                        author: starterMessage.author.username,
-                    };
+                    const threadMetadata = await getThreadMetadata(thread);
 
                     threadData.push(threadMetadata);
 
@@ -112,9 +97,12 @@ module.exports = {
                     i++;
                 }
 
+                // 각 채널 json 저장
+                groupThreadsByWeekAndSave(threadData)
                 // 각 채널의 스레드 데이터를 allThreadData에 추가
                 allThreadData.push(...threadData);
             }
+
 
             return allThreadData;
         } catch (error) {
@@ -215,7 +203,7 @@ async function getThreadMetadata(thread) {
     }
 
     // console.log(`messages: ${JSON.stringify(Array.from(messages.values()), null, 2)}`);
-    console.log(`Object.keys(messages).length: ${Object.keys(messages).length} ,  messages.length:${messages.length},messages.size : ${messages.size}`)
+    console.log(`messages.size : ${messages.size}`)
     const mainPost = !messageFailed && messages.size ? messages.last() : { reactions: { cache: new Map() } }; // Mock main post if no messages
 
     const mainPostReactions = !messageFailed && messages.size ?
@@ -231,7 +219,7 @@ async function getThreadMetadata(thread) {
     try {
         const starterMessage = await thread.fetchStarterMessage();
         if (starterMessage) {
-            authorName = starterMessage.author.username;
+            authorName = starterMessage.author.displayName;
         } else {
             console.log('스레드 시작 메시지를 찾을 수 없습니다.');
         }
@@ -246,6 +234,8 @@ async function getThreadMetadata(thread) {
     }
 
     return {
+        channelId: thread.parentId,
+        channelName: thread.parent.name,
         threadId: thread.id,
         threadName: thread.name,
         threadLink: `https://discord.com/channels/${thread.guild.id}/${thread.id}`,
