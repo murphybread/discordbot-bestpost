@@ -8,8 +8,11 @@ function getPath(channelKey, weekFolder, fileName) {
 
 // Function to save top 5 posts for each channel and week
 function saveTop5PostsByChannelAndWeek(threads) {
+    // threadId를 기준으로 중복 제거
+    const uniqueThreads = Array.from(new Map(threads.map(thread => [thread.threadId, thread])).values());
+
     // 채널과 주차별로 스레드를 그룹화
-    const threadsByChannelAndWeek = threads.reduce((acc, thread) => {
+    const threadsByChannelAndWeek = uniqueThreads.reduce((acc, thread) => {
         const { channelName, weekNumber } = thread;
         const key = `channel_${channelName}:::week${weekNumber}`;
 
@@ -94,57 +97,50 @@ function saveFormattedTop5Posts(threads) {
 }
 
 // threads 데이터를 파일에서 불러오기
-// threads 데이터를 파일에서 불러오기
 function loadThreadsFromFile() {
     const dataDir = path.join(process.cwd(), 'data');
-    let allThreads = [];
+    let allThreads = new Map(); // Map을 사용하여 중복 방지
 
-    // 디렉토리 내의 모든 파일과 폴더를 순회
     const items = fs.readdirSync(dataDir);
-    console.log(`Data directory items: ${items}`); // 데이터 디렉토리 항목 출력
 
     items.forEach((item) => {
         const itemPath = path.join(dataDir, item);
-        console.log(`Processing item: ${itemPath}`); // 현재 처리 중인 항목 경로 출력
 
-        // 파일인지 폴더인지 확인
         if (fs.statSync(itemPath).isDirectory()) {
-            console.log(`Directory found: ${itemPath}`); // 디렉토리 확인 로그
-            // 각 채널 폴더 내의 주차 폴더 순회
             const weekFolders = fs.readdirSync(itemPath);
-            console.log(`Week folders in ${itemPath}: ${weekFolders}`); // 주차 폴더 목록 출력
 
             weekFolders.forEach((weekFolder) => {
                 const weekPath = path.join(itemPath, weekFolder);
-
-                // 주차 폴더 내의 모든 JSON 파일을 탐색
-                const filesInWeekFolder = fs.readdirSync(weekPath).filter(file => file.endsWith('.json'));
-                console.log(`JSON files in ${weekPath}: ${filesInWeekFolder}`); // 주차 폴더 내 파일 목록 출력
+                const filesInWeekFolder = fs.readdirSync(weekPath)
+                    .filter(file => file.endsWith('.json'))
+                    // top5Posts.json과 FormattedPosts.json 파일은 제외
+                    .filter(file => !file.includes('top5Posts') && !file.includes('FormattedPosts'));
 
                 filesInWeekFolder.forEach((fileName) => {
                     const threadFile = path.join(weekPath, fileName);
-                    console.log(`Looking for thread file: ${threadFile}`); // 찾고 있는 파일 경로 출력
 
                     if (fs.existsSync(threadFile)) {
                         try {
                             const data = fs.readFileSync(threadFile, 'utf-8');
                             const threads = JSON.parse(data);
-                            console.log(`Loaded threads from ${threadFile}`); // 파일에서 스레드 로드 성공 로그
-                            allThreads.push(...threads); // 모든 스레드를 모아서 배열에 저장
+                            // threadId를 키로 사용하여 중복 제거
+                            threads.forEach(thread => {
+                                allThreads.set(thread.threadId, thread);
+                            });
                         } catch (err) {
-                            console.error(`Error reading file: ${threadFile}`, err); // 파일 읽기 오류 로그
+                            console.error(`Error reading file: ${threadFile}`, err);
                         }
                     }
                 });
             });
-        } else {
-            console.log(`${item}은(는) 파일이므로 무시합니다.`); // 파일일 때 무시하는 로그
         }
     });
 
-    return allThreads;
+    return Array.from(allThreads.values()); // Map을 배열로 변환
 }
+
+// 메인 실행 코드
 const threads = loadThreadsFromFile();
-console.log(threads);
+console.log(`총 ${threads.length}개의 고유한 스레드를 로드했습니다.`);
 saveTop5PostsByChannelAndWeek(threads);
 saveFormattedTop5Posts(threads);
