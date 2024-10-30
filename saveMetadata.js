@@ -47,13 +47,14 @@ function groupThreadsByWeekAndSave() {
             const weekFolderName = `week${weekNumber}`; // week1, week2 같은 폴더명
             const weekFolderPath = path.join(dataDir, weekFolderName);
 
-            // 폴더가 없으면 생성
-            if (!fs.existsSync(weekFolderPath)) {
-                fs.mkdirSync(weekFolderPath);
+            const channelFolderPath = path.join(dataDir, 'channel_' + threadData[0].channelName, `week${weekNumber}`); // 예시
+
+            if (!fs.existsSync(channelFolderPath)) {
+                fs.mkdirSync(channelFolderPath);
             }
 
             // 해당 주차의 데이터를 저장할 파일 경로
-            const filePath = path.join(weekFolderPath, `${weekFolderName}-threads.json`);
+            const filePath = path.join(channelFolderPath, `${weekFolderName}-threads.json`);
 
             // 데이터를 파일로 저장
             fs.writeFile(filePath, JSON.stringify(threadsByWeek[weekNumber], null, 2), (err) => {
@@ -111,7 +112,7 @@ if (!fs.existsSync(tempDir)) {
 }
 
 function saveTempData(threadData, batchIndex) {
-    const tempDataPath = path.join(tempDir, `tempThreadData_${batchIndex}.json`);
+    const tempDataPath = path.join(tempDir, `temp-${threadData[0].channelName}-ThreadData_${batchIndex}.json`);
     try {
         console.log(`+++++++++++++++++ start saving temp data for batch ${batchIndex} ++++++++++++++++`);
         fs.writeFileSync(tempDataPath, JSON.stringify(threadData, null, 2));

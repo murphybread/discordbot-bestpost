@@ -8,7 +8,7 @@ const {
     updatePreviousData,
     groupThreadsByWeekAndSave,
 } = require('./saveMetadata');
-const { compareData } = require('./compareMetadata');
+// const { compareData } = require('./compareMetadata');
 
 async function main() {
 

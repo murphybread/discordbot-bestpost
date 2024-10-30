@@ -19,126 +19,114 @@ module.exports = {
     client,
     getMetadata: async function () {
         try {
-            const channel = await client.channels.fetch(process.env.CHANNEL_ID);
+            const channels = [process.env.CHANNEL_ID_1, process.env.CHANNEL_ID_2, process.env.CHANNEL_ID_3];
 
-            console.log(`Fetched channel: ${channel.name} (ID: ${channel.id}), Type: ${channel.type}`);
+            const allThreadData = [];
 
-            // Check if the channel is a GUILD_FORUM
-            if (channel.type !== ChannelType.GuildForum) {
-                console.log('Channel is not a forum channel. Cannot track threads in non-forum channels.');
-                return [];
-            }
+            // 각 채널 순회 처리
+            for (const channelId of channels) {
+                const channel = await client.channels.fetch(channelId);
 
-            // Fetch active threads (posts) in the forum channel
-            const fetchedThreads = await channel.threads.fetchActive();
-            const threads = fetchedThreads.threads;
+                console.log(`Fetched channel: ${channel.name} (ID: ${channel.id}), Type: ${channel.type}`);
 
-            // Fetch Archieved
-            const fetchedArchivedThreads = await channel.threads.fetchArchived();
+                // Check if the channel is a GUILD_FORUM
+                if (channel.type !== ChannelType.GuildForum) {
+                    console.log('Channel is not a forum channel. Cannot track threads in non-forum channels.');
+                    continue; // 다음 채널로 넘어감
+                }
 
+                // Fetch active threads in the forum channel
+                const fetchedThreads = await channel.threads.fetchActive();
+                const threads = fetchedThreads.threads;
 
-            console.log(`Successfully fetched ${threads.size} active threads in forum channel.\nArchieved channel ${fetchedArchivedThreads.threads.size}`);
+                console.log(`Successfully fetched ${threads.size} active threads in forum channel.`);
 
-            const threadData = [];
-            let batchIndex = 1;
-            let i = 1;
+                const threadData = [];
+                let batchIndex = 1;
+                let i = 1;
 
-            for (const thread of threads.values()) {
-                console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
-                console.log(`${i}번째 쓰레드\n`);
+                for (const thread of threads.values()) {
+                    console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
+                    console.log(`${i}번째 쓰레드\n 총 ${threads.size}`);
 
+                    // Fetch the starter message (main post)
+                    let starterMessage;
+                    try {
+                        starterMessage = await thread.fetchStarterMessage();
+                    } catch (error) {
+                        console.error(`Failed to fetch starter message for thread ${thread.name}:`, error.message);
+                        starterMessage = {
+                            content: "이 스레드의 시작 메시지를 가져오지 못했습니다.", // Dummy message content
+                            author: { username: "Unknown Author" }, // Dummy author
+                            reactions: {
+                                cache: new Map([]), // Initialize reactions as an empty Map
+                            },
+                        };
+                    }
 
-                // Fetch the starter message (main post) within try-catch
-                let starterMessage;
-                try {
-                    starterMessage = await thread.fetchStarterMessage();
-                } catch (error) {
-                    console.error(`Failed to fetch starter message for thread ${thread.name}:`, error.message);
-                    starterMessage = {
-                        content: "이 스레드의 시작 메시지를 가져오지 못했습니다.", // Dummy message content
-                        author: { username: "Unknown Author" }, // Dummy author
-                        reactions: {
-                            cache: new Map([]), // Initialize reactions as an empty Map
-                        },
+                    const mainPostReactions = starterMessage.reactions.cache.size > 0
+                        ? Array.from(starterMessage.reactions.cache.values()).reduce(
+                            (acc, reaction) => acc + reaction.count,
+                            0
+                        )
+                        : 0;
+
+                    // Fetch all messages in the thread
+                    const messages = await fetchAllMessages(thread);
+                    const messageCount = messages.length - 1; // Subtracting 1 to exclude the starter message
+
+                    let totalReactions = 0;
+                    for (const message of messages) {
+                        const reactionCount = message.reactions.cache.reduce(
+                            (acc, reaction) => acc + reaction.count,
+                            0
+                        );
+                        totalReactions += reactionCount;
+                    }
+
+                    const threadLink = `https://discord.com/channels/${thread.guild.id}/${thread.id}`;
+                    const creationDate = thread.createdAt;
+                    const weekNumber = getWeekNumber(creationDate);
+
+                    const threadMetadata = {
+                        channelId: channel.id,
+                        channelName: channel.name,
+                        threadId: thread.id,
+                        threadName: thread.name,
+                        threadLink: threadLink,
+                        creationDate: creationDate,
+                        weekNumber: weekNumber,
+                        mainPostReactions: mainPostReactions,
+                        totalReactions: totalReactions,
+                        messageCount: messageCount,
+                        author: starterMessage.author.username,
                     };
+
+                    threadData.push(threadMetadata);
+
+                    // Save every 10 threads
+                    if (i % 10 === 0) {
+                        const batchData = threadData.slice((batchIndex - 1) * 10, batchIndex * 10);
+                        saveTempData(batchData, batchIndex++); // Save the batch
+                    }
+                    i++;
                 }
 
-                if (!starterMessage) {
-                    console.log(`Could not fetch starter message for thread ${thread.name}`);
-                }
-
-                // Get the number of reactions on the starter message
-                const mainPostReactions = starterMessage.reactions.cache.size > 0
-                    ? Array.from(starterMessage.reactions.cache.values()).reduce(
-                        (acc, reaction) => acc + reaction.count,
-                        0
-                    )
-                    : 0;
-
-                console.log(`Main post reactions in thread ${thread.name}: ${mainPostReactions}`);
-
-                // Fetch all messages in the thread
-                const messages = await fetchAllMessages(thread);
-                console.log(`Fetched ${messages.length} messages in thread ${thread.name}`);
-
-                // The number of messages in the thread (excluding the starter message)
-                const messageCount = messages.length - 1; // Subtracting 1 to exclude the starter message
-
-                console.log(`Number of messages in thread ${thread.name}: ${messageCount}`);
-
-                // Optionally, calculate total reactions in all messages
-                let totalReactions = 0;
-                for (const message of messages) {
-                    const reactionCount = message.reactions.cache.reduce(
-                        (acc, reaction) => acc + reaction.count,
-                        0
-                    );
-                    totalReactions += reactionCount;
-                }
-
-                console.log(`Total reactions in thread ${thread.name}: ${totalReactions}`);
-
-                // Construct the thread link
-                const threadLink = `https://discord.com/channels/${thread.guild.id}/${thread.id}`;
-
-                // Get the thread creation date
-                const creationDate = thread.createdAt; // This is a Date object
-
-                // Determine the week number
-                const weekNumber = getWeekNumber(creationDate);
-
-                console.log(
-                    `Thread ${thread.name} was created on ${creationDate.toDateString()}, Week ${weekNumber}`
-                );
-
-                const threadMetadata = await getThreadMetadata(thread);
-                threadData.push(threadMetadata);
-
-                console.log('Thread metadata:', threadMetadata); // 디버깅을 위해 추가
-
-                // Save every 10 threads
-                if (i % 10 === 0) {
-                    const batchData = threadData.slice((batchIndex - 1) * 10, batchIndex * 10); // Get the last 10 threads
-                    saveTempData(batchData, batchIndex++); // Save the batch
-                }
-                else if ((i >= thread.size) && (thread.size % 10 !== 0)) {
-                    const batchData = threadData.slice(i * 10, thread.size); // Get the last 10 threads
-                    saveTempData(batchData, batchIndex++); // Save the batch
-
-                }
-                i++;
+                // 각 채널의 스레드 데이터를 allThreadData에 추가
+                allThreadData.push(...threadData);
             }
 
-            return threadData;
+            return allThreadData;
         } catch (error) {
             console.error(`Failed to fetch threads:`, error.message);
-            console.error('Stack trace:', error.stack);  // 에러 스택 확인
+            console.error('Stack trace:', error.stack);
             if (error.rawError) {
-                console.error('Raw error details:', JSON.stringify(error.rawError, null, 2)); // Discord에서 제공하는 원시 에러
+                console.error('Raw error details:', JSON.stringify(error.rawError, null, 2));
             }
         }
     },
 };
+
 
 // Function to fetch all messages in a thread using pagination
 async function fetchAllMessages(thread) {

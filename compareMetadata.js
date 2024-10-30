@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const weekFolder = 'week1';  // You can change this to 'week2', 'week3', etc.
+const weekFolder = 'week3';  // You can change this to 'week2', 'week3', etc.
 const weekFile = `${weekFolder}-threads.json`;  // File name based on weekFolder
 
 function getPath(directoryName, fileName) {
