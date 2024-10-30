@@ -11,23 +11,20 @@
 - data 추출해서 이번주 게시물로 저장하기 ✅
 - week데이터에서 best게시물 top5 선정하기 ✅
     - best 5게시물 보기좋게 이름, 총 리액션, 메시지 수 링크 정리 ✅
-- 봇커맨드 입력에 따라 오늘 괜찮은 게시물 추천받기 📝
+- 봇커맨드 입력에 따라 오늘 괜찮은 게시물 추천받기 ✅
 - 토론하기 이외에 여러채널 데이터 저장하기 ✅
 - best게시물까지 저장하기 ✅
 
 discord scope
-- bot
-- applications.commands
+    [✓] bot
+    [✓] applications.commands
 
 
 discord bot권한
-- General Permissions
-    - View Channels
-- Text Permissions
-    - Send Messages
-    - Read Message History
-    - Add Reactions
-
+     [✓] Send Messages
+     [✓] Embed Links
+     [✓] Read Messages/View Channels
+     [✓] Use Slash Commands
 
 # Architecture 
 +--------------------+               +---------------+               +--------------+
