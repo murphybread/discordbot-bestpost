@@ -186,6 +186,9 @@ async function getThreadMetadata(thread) {
     const threadCreatedAt = new Date(thread.createdAt);
     const weekNumber = Math.ceil((threadCreatedAt - startDate) / (7 * 24 * 60 * 60 * 1000));
     const threadCreatedAtKST = threadCreatedAt.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    console.log(`threadCreatedAt: ${threadCreatedAt}`)
+    console.log(`weekNumber: ${weekNumber}`)
+
 
 
     let messageFailed = false;
