@@ -13,11 +13,8 @@ if (!fs.existsSync(dataDir)) {
 }
 
 function sanitizeFolderName(name) {
-    return name
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
-        .replace(/[^\w\s-]/g, '');
+    return name.replace(/[<>:"/\\|?*]/g, '');
 }
-
 
 // Function to group threads by week and write to respective folders
 function saveThreadsByWeekAndChannel(threads) {
