@@ -13,7 +13,9 @@ if (!fs.existsSync(dataDir)) {
 }
 
 function sanitizeFolderName(name) {
-    return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, ''); // 파일 시스템에서 허용되지 않는 문자 제거
+    return name
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+        .replace(/[^\w\s-]/g, '');
 }
 
 
@@ -83,10 +85,7 @@ function saveThreadsByChannel(thread) {
 }
 
 
-// Helper function to sanitize folder names
-function sanitizeFolderName(name) {
-    return name.replace(/[<>:"/\\|?*]+/g, '_'); // 특수문자 변환
-}
+
 function saveCurrentData(threadData) {
     try {
         console.log(`+++++++++++++++++ start saveCurrentData ++++++++++++++++ `)

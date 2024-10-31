@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 const { Client, GatewayIntentBits, ChannelType, Partials } = require('discord.js');
-const { saveTempData, saveThreadsByWeekAndChannel, saveThreadsByChannel } = require('./saveMetadata');
+const { saveCurrentData, saveTempData, saveThreadsByWeekAndChannel, saveThreadsByChannel } = require('./savemetadata');
 
 const client = new Client({
     intents: [
@@ -14,6 +14,39 @@ const client = new Client({
     ],
     partials: [Partials.Channel, Partials.Message, Partials.Reaction],
 });
+
+async function main() {
+    try {
+        await client.login(process.env.DISCORD_TOKEN);
+        console.log('Discord 클라이언트 로그인 완료');
+
+        const fetchedData = await module.exports.getMetadata();
+        console.log('가져온 데이터:', JSON.stringify(fetchedData, null, 2));
+
+        fetchedData.forEach(thread => {
+            console.log(`Thread: ${thread.threadName}, Author: ${thread.author}`);
+        });
+
+        // Save the current data
+        saveCurrentData(fetchedData);
+        console.log(`채널 데이터 수집이 완료됐습니다.`);
+
+        // 작업 완료 후 클라이언트 종료
+        client.destroy();
+    } catch (error) {
+        console.error('Error:', error);
+        client.destroy();
+    }
+}
+
+// 직접 실행될 때만 main 함수 실행
+if (require.main === module) {
+    main().catch(error => {
+        console.error('Error in main:', error);
+        process.exit(1);
+    });
+}
+
 
 module.exports = {
     client,
@@ -148,46 +181,6 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Function to determine the week number based on the creation date
-function getWeekNumber(creationDate) {
-    // KST 시간으로 변환
-    const kstCreationDate = new Date(creationDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-
-    // Define your weekly intervals based on KST
-    const weeks = [
-        {
-            weekNumber: 1,
-            startDate: new Date('2023-10-15T00:00:00+09:00'), // KST 기준 시작 시간
-            endDate: new Date('2023-10-21T23:59:59+09:00'),   // KST 기준 종료 시간
-        },
-        {
-            weekNumber: 2,
-            startDate: new Date('2023-10-22T00:00:00+09:00'),
-            endDate: new Date('2023-10-28T23:59:59+09:00'),
-        },
-        {
-            weekNumber: 3,
-            startDate: new Date('2023-10-29T00:00:00+09:00'),
-            endDate: new Date('2023-11-04T23:59:59+09:00'),
-        },
-        {
-            weekNumber: 4,
-            startDate: new Date('2023-11-05T00:00:00+09:00'),
-            endDate: new Date('2023-11-11T23:59:59+09:00'),
-        },
-    ];
-
-    // Iterate over the weeks to find where the creationDate falls
-    for (const week of weeks) {
-        if (new Date(kstCreationDate) >= week.startDate && new Date(kstCreationDate) <= week.endDate) {
-            return week.weekNumber;
-        }
-    }
-
-    // If not found in any week, return 0 or undefined
-    return 0;
-}
-
 async function getThreadMetadata(thread) {
     const startDate = new Date('2024-10-15T00:00:00.00+09:00');
     const threadCreatedAt = new Date(thread.createdAt);
@@ -220,7 +213,8 @@ async function getThreadMetadata(thread) {
     try {
         const starterMessage = await thread.fetchStarterMessage();
         if (starterMessage) {
-            authorName = starterMessage.author.displayName;
+            const member = await thread.guild.members.fetch(starterMessage.author.id);
+            authorName = member.nickname || member.displayName;
         } else {
             console.log('스레드 시작 메시지를 찾을 수 없습니다.');
         }

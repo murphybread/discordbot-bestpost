@@ -1,69 +1,146 @@
 const fs = require('fs');
 const path = require('path');
 
-const weekFolder = 'week3';  // You can change this to 'week2', 'week3', etc.
-const weekFile = `${weekFolder}-threads.json`;  // File name based on weekFolder
-
-function getPath(directoryName, fileName) {
-    return path.join(__dirname, 'data', directoryName, fileName);
+// Helper: 폴더와 파일 경로 생성
+function getPath(channelKey, weekFolder, fileName) {
+    return path.join(process.cwd(), 'data', channelKey, weekFolder, fileName);
 }
 
-// 현재 데이터를 읽고 상위 5개 게시물을 저장하는 함수
-function saveTop5Posts(threadData, weekFolder) {
-    const dataDir = path.join(__dirname, 'data', weekFolder);
+// Function to save top 5 posts for each channel and week
+function saveTop5PostsByChannelAndWeek(threads) {
+    // threadId를 기준으로 중복 제거
+    const uniqueThreads = Array.from(new Map(threads.map(thread => [thread.threadId, thread])).values());
 
-    const top5Posts = threadData
-        .sort((a, b) => (b.totalReactions + b.messageCount) - (a.totalReactions + a.messageCount))
-        .slice(0, 5); // 상위 5개 선택
+    // 채널과 주차별로 스레드를 그룹화
+    const threadsByChannelAndWeek = uniqueThreads.reduce((acc, thread) => {
+        const { channelName, weekNumber } = thread;
+        const key = `channel_${channelName}:::week${weekNumber}`;
 
-    const top5FileName = `${weekFolder}-top5Posts.json`;
-    const top5Path = path.join(dataDir, top5FileName);  // week1-top5Posts.json 형태
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(thread);
 
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-    }
+        return acc;
+    }, {});
 
-    try {
-        fs.writeFileSync(top5Path, JSON.stringify(top5Posts, null, 2));
-        console.log(`Successfully saved top 5 posts in ${weekFolder} folder!`);
-    } catch (err) {
-        console.error(`Error writing top 5 posts to ${weekFolder}:`, err);
-    }
+    // 각 채널과 주차별로 상위 5개 게시물 저장
+    Object.keys(threadsByChannelAndWeek).forEach((key) => {
+        const [channelPart, weekFolder] = key.split(':::');
+        const dataDir = path.join(process.cwd(), 'data', channelPart, weekFolder);
+
+        // 상위 5개 게시물 선택
+        const top5Posts = threadsByChannelAndWeek[key]
+            .sort((a, b) => (b.totalReactions + b.messageCount) - (a.totalReactions + a.messageCount))
+            .slice(0, 5);
+
+        const top5FileName = `${weekFolder}-top5Posts.json`;
+        const top5Path = getPath(channelPart, weekFolder, top5FileName);
+
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        try {
+            fs.writeFileSync(top5Path, JSON.stringify(top5Posts, null, 2));
+            console.log(`Successfully saved top 5 posts for ${key}`);
+        } catch (err) {
+            console.error(`Error writing top 5 posts for ${key}:`, err);
+        }
+    });
 }
 
-const data = fs.readFileSync(getPath(weekFolder, weekFile), 'utf-8');
-const threadData = JSON.parse(data);
-saveTop5Posts(threadData, weekFolder);
+// Function to save formatted top 5 posts for each channel and week
+function saveFormattedTop5Posts(threads) {
+    // 채널과 주차별로 스레드를 그룹화
+    const threadsByChannelAndWeek = threads.reduce((acc, thread) => {
+        const { channelName, weekNumber } = thread;
+        const key = `channel_${channelName}:::week${weekNumber}`;
 
-function saveBest5PostsFormatted(week) {
-    const dataPath = getPath(week, `${week}-top5Posts.json`);
-    const outputPath = getPath(week, `${week}-top5FormattedPosts.json`);
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(thread);
 
-    // 파일을 읽고 상위 5개의 게시물을 출력
-    let top5Data;
-    try {
-        top5Data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-    } catch (err) {
-        console.error(`Error reading or parsing top 5 posts file:`, err);
-        return;
-    }
+        return acc;
+    }, {});
 
-    // JSON 형식의 데이터로 변환
-    const formattedData = top5Data.map(post => ({
-        게시물제목: post.threadName,
-        총_이모지_리액션_수: post.totalReactions,
-        총_메시지_수: post.messageCount,
-        링크: post.threadLink
-    }));
+    // 각 채널과 주차별로 포맷된 상위 5개 게시물 저장
+    Object.keys(threadsByChannelAndWeek).forEach((key) => {
+        const [channelPart, weekFolder] = key.split(':::');
+        const dataDir = path.join(__dirname, channelPart, weekFolder);
 
-    // JSON 형식으로 파일 저장
-    try {
-        fs.writeFileSync(outputPath, JSON.stringify(formattedData, null, 2)); // JSON 형식으로 저장
-        console.log(`Successfully saved formatted top 5 posts in ${week} folder as JSON!`);
-    } catch (err) {
-        console.error(`Error writing formatted top 5 posts to ${week}:`, err);
-    }
+        const top5FileName = `${weekFolder}-top5Posts.json`;
+        const formattedFileName = `${weekFolder}-top5FormattedPosts.json`;
+        const top5Path = getPath(channelPart, weekFolder, top5FileName);
+        const formattedPath = getPath(channelPart, weekFolder, formattedFileName);
+
+        let top5Data;
+        try {
+            top5Data = JSON.parse(fs.readFileSync(top5Path, 'utf-8'));
+        } catch (err) {
+            console.error(`Error reading top 5 posts file for ${key}:`, err);
+            return;
+        }
+
+        const formattedData = top5Data.map(post => ({
+            게시물제목: post.threadName,
+            총_이모지_리액션_수: post.totalReactions,
+            총_메시지_수: post.messageCount,
+            링크: post.threadLink,
+            작성자: post.author
+        }));
+
+        try {
+            fs.writeFileSync(formattedPath, JSON.stringify(formattedData, null, 2));
+            console.log(`Successfully saved formatted top 5 posts for ${key}`);
+        } catch (err) {
+            console.error(`Error writing formatted top 5 posts for ${key}:`, err);
+        }
+    });
 }
 
+// threads 데이터를 파일에서 불러오기
+function loadThreadsFromFile() {
+    const dataDir = path.join(process.cwd(), 'data');
+    let allThreads = new Map(); // Map을 사용하여 중복 방지
 
-saveBest5PostsFormatted(weekFolder);
+    const items = fs.readdirSync(dataDir);
+
+    items.forEach((item) => {
+        const itemPath = path.join(dataDir, item);
+
+        if (fs.statSync(itemPath).isDirectory()) {
+            const weekFolders = fs.readdirSync(itemPath);
+
+            weekFolders.forEach((weekFolder) => {
+                const weekPath = path.join(itemPath, weekFolder);
+                const filesInWeekFolder = fs.readdirSync(weekPath)
+                    .filter(file => file.endsWith('.json'))
+                    // top5Posts.json과 FormattedPosts.json 파일은 제외
+                    .filter(file => !file.includes('top5Posts') && !file.includes('FormattedPosts'));
+
+                filesInWeekFolder.forEach((fileName) => {
+                    const threadFile = path.join(weekPath, fileName);
+
+                    if (fs.existsSync(threadFile)) {
+                        try {
+                            const data = fs.readFileSync(threadFile, 'utf-8');
+                            const threads = JSON.parse(data);
+                            // threadId를 키로 사용하여 중복 제거
+                            threads.forEach(thread => {
+                                allThreads.set(thread.threadId, thread);
+                            });
+                        } catch (err) {
+                            console.error(`Error reading file: ${threadFile}`, err);
+                        }
+                    }
+                });
+            });
+        }
+    });
+
+    return Array.from(allThreads.values()); // Map을 배열로 변환
+}
+
+// 메인 실행 코드
+const threads = loadThreadsFromFile();
+console.log(`총 ${threads.length}개의 고유한 스레드를 로드했습니다.`);
+saveTop5PostsByChannelAndWeek(threads);
+saveFormattedTop5Posts(threads);
