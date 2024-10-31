@@ -59,10 +59,12 @@ module.exports = {
                 const data = await fs.readFile(filePath, 'utf-8');
                 posts = JSON.parse(data);
             } catch (error) {
-                return await interaction.reply({
-                    content: `${week}의 ${channel} 채널 데이터가 아직 없습니다.`,
-                    ephemeral: true
-                });
+                if (!interaction.replied) {
+                    return await interaction.reply({
+                        content: `${week}의 ${channel} 채널 데이터가 아직 없습니다.`,
+                        ephemeral: true
+                    });
+                }
             }
 
             // Discord 임베드 메시지 생성
@@ -85,13 +87,13 @@ module.exports = {
         };
 
         await interaction.reply({ embeds: [embed] });
-
-    } catch(error) {
         console.error('Error:', error);
-        await interaction.reply({
-            content: '데이터를 불러오는 중 오류가 발생했습니다.',
-            ephemeral: true
-        });
+        if (!interaction.replied) {
+            await interaction.reply({
+                content: '데이터를 불러오는 중 오류가 발생했습니다.',
+                ephemeral: true
+            });
+        }
     }
 },
 }; 
