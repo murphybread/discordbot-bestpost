@@ -50,7 +50,7 @@ module.exports = {
                 'data',
                 `channel_${channel}`,
                 week,
-                `${week}-top5FormattedPosts.json`
+                `${week}-${channel}.json`
             );
 
             console.log('Trying to read file:', filePath); // 디버깅용
@@ -88,15 +88,15 @@ module.exports = {
                 color: colorMap[channel] || 0x0099ff,
                 title: `${channel} 채널의 ${today} 추천 게시물`,
                 description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n 문의 링크 <@${process.env.USER_ID}>`,
-                fields: bestPost.map((post, index) => ({
-                    name: `${index + 1}위: ${post.게시물제목}`,
+                fields: [{
+                    name: `게시글제목: ${bestPost.threadName}`,
                     value: [
-                        `👍 반응: ${post.총_이모지_리액션_수}`,
-                        `💬 댓글: ${post.총_메시지_수}`,
-                        `✍️ 작성자: ${post.작성자}`,
-                        `🔗 [게시물 바로가기](${post.링크})`
+                        `👍 반응: ${bestPost.totalReactions}`,
+                        `💬 댓글: ${bestPost.messageCount}`,
+                        `✍️ 작성자: ${bestPost.author}`,
+                        `🔗 [게시물 바로가기](${bestPost.threadLink})`
                     ].join('\n')
-                })),
+                }],
                 timestamp: new Date(),
                 footer: {
                     text: '작성자 [FE] 민찬 | 계속 업데이트 예정'
