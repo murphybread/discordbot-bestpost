@@ -73,19 +73,19 @@ module.exports = {
                 title: `${channel} 채널의 ${week} 추천 게시물 TOP 5`,
                 description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n 문의 링크 <@${process.env.USER_ID}>`,
                 fields: posts.map((post, index) => ({
-                    name: `${index + 1}위: ${post.게시물제목}`,
+                    name: `${index + 1}위: ${post.threadName}`,
                     value: [
-                        `👍 반응: ${post.threadName}`,
+                        `👍 반응: ${post.totalReactions}`,
                         `💬 댓글: ${post.messageCount}`,
                         `✍️ 작성자: ${post.author}`,
-                        `📅 글 작성날짜: ${bestPost.creationDate}`,
+                        `📅 글 작성날짜: ${post.creationDate}`,
                         `🔗 [게시물 바로가기](${post.threadLink})`
                     ].join('\n')
                 })),
 
                 timestamp: new Date(),
                 footer: {
-                    text: '디스코드 도서관 | 매주 업데이트'
+                    text: '작성자 [FE] 민찬 | 데이터는 6시간마다 업데이트 중'
                 }
             };
 
