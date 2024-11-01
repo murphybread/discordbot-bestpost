@@ -28,15 +28,3 @@ discord bot권한
      [✓] Embed Links
      [✓] Read Messages/View Channels
      [✓] Use Slash Commands
-
-# Architecture 
-+--------------------+               +---------------+               +--------------+
-| Your Code (Bot App)| ---> Login --->| Discord API   | ---> Events --->| Bot in Servers|
-+--------------------+               +---------------+               +--------------+
-        |                                |                                 |
-        |                                V                                 |
-        +---> Client Instance        Listens for Intents              Executes Commands
-        |     with Intents                                               in Servers
-        |
-    Environment Config
-    (.env, dotenv)
