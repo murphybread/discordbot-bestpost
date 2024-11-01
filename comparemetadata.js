@@ -80,11 +80,12 @@ function saveFormattedTop5Posts(threads) {
         }
 
         const formattedData = top5Data.map(post => ({
-            게시물제목: post.threadName,
-            총_이모지_리액션_수: post.totalReactions,
-            총_메시지_수: post.messageCount,
-            링크: post.threadLink,
-            작성자: post.author
+            threadName: post.threadName,
+            totalReactions: post.totalReactions,
+            messageCount: post.messageCount,
+            threadLink: post.threadLink,
+            author: post.author,
+            creationDate: post.creationDate
         }));
 
         try {
