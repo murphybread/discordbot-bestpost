@@ -58,11 +58,12 @@ module.exports = {
             // 파일 읽기 시도
             let posts;
             let bestPost;
+            let todayPosts;
             try {
                 const data = await fs.readFile(filePath, 'utf-8');
                 posts = JSON.parse(data);
 
-                const todayPosts = posts.filter(post => post.creationDate.startsWith(today));
+                todayPosts = posts.filter(post => post.creationDate.startsWith(today));
                 if (todayPosts.length === 0) {
                     return await interaction.reply({
                         content: `${today}의 ${channel} 채널 데이터가 아직 없습니다.`,
@@ -87,7 +88,7 @@ module.exports = {
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
                 title: `${channel} 채널의 ${today} 추천 게시물`,
-                description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n 문의 링크 <@${process.env.USER_ID}>`,
+                description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n ${today}  등록된 게시글 ${todayPosts.length} .\n 문의 링크 <@${process.env.USER_ID}>`,
                 fields: [{
                     name: `게시글제목: ${bestPost.threadName}`,
                     value: [
@@ -95,7 +96,7 @@ module.exports = {
                         `💬 댓글: ${bestPost.messageCount}`,
                         `✍️ 작성자: ${bestPost.author}`,
                         `📅 글 작성날짜: ${bestPost.creationDate}`,
-                        `🔗 [게시물 바로가기](${bestPost.threadLink})`
+                        `🔗 [게시물 바로가기](${bestPost.threadLink})`,
                     ].join('\n')
                 }],
                 timestamp: new Date(),
