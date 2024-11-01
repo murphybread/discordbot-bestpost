@@ -88,7 +88,7 @@ module.exports = {
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
                 title: `${channel} 채널의 ${today} 추천 게시물`,
-                description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n ${today}  등록된 게시글 ${todayPosts.length} .\n 문의 링크 <@${process.env.USER_ID}>`,
+                description: `가장 많은 반응과 댓글을 받은 게시물들입니다.\n ${today}  등록된 게시글 ${todayPosts.length}\n문의 링크 <@${process.env.USER_ID}>`,
                 fields: [{
                     name: `게시글제목: ${bestPost.threadName}`,
                     value: [
