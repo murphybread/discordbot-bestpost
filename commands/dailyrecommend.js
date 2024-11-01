@@ -99,7 +99,7 @@ module.exports = {
                 }],
                 timestamp: new Date(),
                 footer: {
-                    text: '작성자 [FE] 민찬 | 계속 업데이트 예정'
+                    text: '작성자 [FE] 민찬 | 데이터는 6시간마다 업데이트 중'
                 }
             };
 
