@@ -94,6 +94,7 @@ module.exports = {
                         `👍 반응: ${bestPost.totalReactions}`,
                         `💬 댓글: ${bestPost.messageCount}`,
                         `✍️ 작성자: ${bestPost.author}`,
+                        `📅 글 작성날짜: ${bestPost.creationDate}`,
                         `🔗 [게시물 바로가기](${bestPost.threadLink})`
                     ].join('\n')
                 }],
