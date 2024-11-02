@@ -84,7 +84,7 @@ module.exports = {
                 })),
                 timestamp: new Date(),
                 footer: {
-                    text: '디스코드 도서관 | 매주 업데이트'
+                    text: 'Developed by [FE] 민찬 | 데이터는 12시간마다 업데이트'
                 }
             };
 
