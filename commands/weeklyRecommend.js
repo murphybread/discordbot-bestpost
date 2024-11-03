@@ -32,6 +32,14 @@ module.exports = {
             const channel = interaction.options.getString('채널');
             const week = interaction.options.getString('주차');
 
+            const weekPeriodMap = {
+                week0: '10.14',
+                week1: '10.15 ~ 10.21',
+                week2: '10.22 ~ 10.28',
+                week3: '10.29 ~ 11.05'
+            };
+            const period = weekPeriodMap[week];
+
             console.log('Selected channel:', channel); // 디버깅용
             console.log('Selected week:', week); // 디버깅용
 
@@ -70,7 +78,7 @@ module.exports = {
             // Discord 임베드 메시지 생성
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
-                title: `${channel} 채널의 ${week} 추천 게시물 TOP 5`,
+                title: `${channel} 채널의 ${week} 추천 게시물 TOP 5 ${period}`,
                 description: '가장 많은 반응과 댓글을 받은 게시물들입니다.',
                 fields: posts.map((post, index) => ({
                     name: `${index + 1}위: ${post.threadName}`,
