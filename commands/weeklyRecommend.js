@@ -78,7 +78,7 @@ module.exports = {
             // Discord 임베드 메시지 생성
             const embed = {
                 color: colorMap[channel] || 0x0099ff,
-                title: `${channel} 채널의 ${week} 추천 게시물 TOP 5 ${period}`,
+                title: `${channel} 채널의 ${week} 추천 게시물 TOP 5 (기간: ${period})`,
                 description: '가장 많은 반응과 댓글을 받은 게시물들입니다.',
                 fields: posts.map((post, index) => ({
                     name: `${index + 1}위: ${post.threadName}`,
