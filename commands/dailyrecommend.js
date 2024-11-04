@@ -24,7 +24,8 @@ module.exports = {
                     { name: '0주차', value: 'week0' },
                     { name: '1주차 10.15~10.21', value: 'week1' },
                     { name: '2주차 10.22~10.28', value: 'week2' },
-                    { name: '3주차 10.29~11.05', value: 'week3' },
+                    { name: '3주차 10.29~11.04', value: 'week3' },
+                    { name: '4주차 11.05~11.12', value: 'week4' },
                 )),
     async execute(interaction) {
         try {

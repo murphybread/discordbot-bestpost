@@ -24,7 +24,8 @@ module.exports = {
                     { name: '0주차', value: 'week0' },
                     { name: '1주차 10.15~10.21', value: 'week1' },
                     { name: '2주차 10.22~10.28', value: 'week2' },
-                    { name: '3주차 10.29~11.05', value: 'week3' },
+                    { name: '3주차 10.29~11.04', value: 'week3' },
+                    { name: '4주차 11.05~11.12', value: 'week4' }
                 )),
 
     async execute(interaction) {
@@ -36,7 +37,8 @@ module.exports = {
                 week0: '10.14',
                 week1: '10.15 ~ 10.21',
                 week2: '10.22 ~ 10.28',
-                week3: '10.29 ~ 11.05'
+                week3: '10.29 ~ 11.04',
+                week4: '11.05 ~ 11.12'
             };
             const period = weekPeriodMap[week];
 
