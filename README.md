@@ -188,6 +188,7 @@ USER_ID
 - Breadking Point 증가량 비교 로직 📝
 - 매일 업데이트되는 금일의 추천 best command 만들기 ✅
 - 클라우드 기반 24시간 호스팅 시스템 ✅
+- 이번주 Best 답변왕 찾기 (동일한 로직 적용: 메시지수+이모지 수 합계) 📝
 
 discord scope
     [✓] bot
