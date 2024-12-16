@@ -21,7 +21,7 @@ const DATA_FILE_PATH = path.join(process.cwd(), "data", "thread_data.json");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("7기_프리코스_게시글_수")
+    .setName("프리코스7기_열정통계")
     .setDescription(
       "프리코스 7기 기간동안 각 채널 및 총 생성된 게시글 수 및 메시지, 이모지 수를 보여줍니다."
     ),
@@ -85,7 +85,7 @@ module.exports = {
         console.log("캐시 파일이 7일 이내 이므로, 캐시파일에서 불러옵니다.");
         const embed = new EmbedBuilder()
           .setColor(0x0099ff)
-          .setTitle("7기 프리코스 게시글 수 요약")
+          .setTitle("7기 프리코스 열정 통계")
           .setDescription(
             "프리코스 7기 기간동안 각 채널에 생성된 게시글 수 및 메시지, 이모지 수입니다."
           )
