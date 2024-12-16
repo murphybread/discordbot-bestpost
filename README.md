@@ -165,11 +165,13 @@ best5 쓰레드 포맷팅
 .env
 
 ```
-DISCORD_TOKEN
-CHANNEL_ID_1
-CHANNEL_ID_2
-CHANNEL_ID_3
-USER_ID
+DISCORD_TOKEN=
+CLIENT_ID=
+GUILD_ID=
+CHANNEL_ID_1=
+CHANNEL_ID_2=
+CHANNEL_ID_3=
+USER_ID=
 
 ```
 
@@ -191,6 +193,7 @@ USER_ID
 - 클라우드 기반 24시간 호스팅 시스템 ✅
 - 이번주 Best 답변왕 찾기 (동일한 로직 적용: 메시지수+이모지 수 합계) 📝
 - (7기프리코스\_열정통계)이번 기수동안 대표 채널 3개 (토론하기, 함께 나누기, 다시-돌아보기) 과 해당 채널들 총 게시글 ,메시지, 이모지 수
+- (프리코스7기\_열정게시물) 이번 기수 7기에 생성된 채널3개에 대하여 메시지수+이모지가 가장많은 게시물 보여주기
 
 discord scope
 
