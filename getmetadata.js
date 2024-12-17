@@ -1,5 +1,3 @@
-// getMetadata.js
-
 require("dotenv").config();
 const {
   Client,
@@ -37,7 +35,6 @@ async function main() {
       console.log(`Thread: ${thread.threadName}, Author: ${thread.author}`);
     });
 
-    // Save the current data
     saveCurrentData(fetchedData);
     console.log(`채널 데이터 수집이 완료됐습니다.`);
 
@@ -77,7 +74,7 @@ module.exports = {
           `Fetched channel: ${channel.name} (ID: ${channel.id}), Type: ${channel.type}`
         );
 
-        // Check if the channel is a GUILD_FORUM
+        // 채널의 종류가 Guild Forum인지 체크크
         if (channel.type !== ChannelType.GuildForum) {
           console.log(
             "Channel is not a forum channel. Cannot track threads in non-forum channels."
@@ -85,7 +82,7 @@ module.exports = {
           continue; // 다음 채널로 넘어감
         }
 
-        // Fetch active threads in the forum channel
+        // Achived 쓰레드를 fetch
         const fetchedThreads = await channel.threads.fetchArchived();
         const threads = fetchedThreads.threads;
 
@@ -101,7 +98,7 @@ module.exports = {
           console.log(`\nProcessing thread: ${thread.name} (ID: ${thread.id})`);
           console.log(`${i}번째 쓰레드 총 ${threads.size} \n`);
 
-          // Fetch the starter message (main post)
+          // 쓰레드의 첫 게시물확인. 이후 게시물들은 서브 메시지 형태
           let starterMessage;
           try {
             starterMessage = await thread.fetchStarterMessage();
@@ -111,10 +108,10 @@ module.exports = {
               error.message
             );
             starterMessage = {
-              content: "이 스레드의 시작 메시지를 가져오지 못했습니다.", // Dummy message content
-              author: { username: "Unknown Author" }, // Dummy author
+              content: "이 스레드의 시작 메시지를 가져오지 못했습니다.",
+              author: { username: "Unknown Author" },
               reactions: {
-                cache: new Map([]), // Initialize reactions as an empty Map
+                cache: new Map([]),
               },
             };
           }
@@ -127,10 +124,8 @@ module.exports = {
                 )
               : 0;
 
-          // Fetch all messages in the thread
           const messages = await fetchAllMessages(thread);
-          const messageCount = messages.length - 1; // Subtracting 1 to exclude the starter message
-
+          const messageCount = messages.length - 1;
           let totalReactions = 0;
           for (const message of messages) {
             const reactionCount = message.reactions.cache.reduce(
@@ -144,13 +139,12 @@ module.exports = {
 
           threadData.push(threadMetadata);
 
-          // Save every 10 threads
           if (i % 10 === 0) {
             const batchData = threadData.slice(
               (batchIndex - 1) * 10,
               batchIndex * 10
             );
-            saveTempData(batchData, batchIndex++); // Save the batch
+            saveTempData(batchData, batchIndex++);
           }
           i++;
         }
@@ -176,7 +170,6 @@ module.exports = {
   },
 };
 
-// Function to fetch all messages in a thread using pagination
 async function fetchAllMessages(thread) {
   let allMessages = [];
   let lastMessageId = null;
@@ -195,14 +188,12 @@ async function fetchAllMessages(thread) {
     allMessages = allMessages.concat(Array.from(messages.values()));
     lastMessageId = messages.last().id;
 
-    // Optional: Wait to avoid hitting rate limits
-    await sleep(1000); // Wait for 1 second
+    await sleep(1000);
   }
 
   return allMessages;
 }
 
-// Helper function to sleep for a specified duration
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -227,7 +218,6 @@ async function getThreadMetadata(thread) {
     messageFailed = true;
   }
 
-  // console.log(`messages: ${JSON.stringify(Array.from(messages.values()), null, 2)}`);
   console.log(`messages.size : ${messages.size}`);
   const mainPost =
     !messageFailed && messages.size
@@ -269,7 +259,6 @@ async function getThreadMetadata(thread) {
       `스레드 ${thread.id}의 시작 메시지를 가져오는 데 실패했습니다:`,
       error
     );
-    // Mocking starterMessage in case of failureㅎ
     starterMessage = {
       author: { username: "Unknown Author" },
       reactions: { cache: new Map() },

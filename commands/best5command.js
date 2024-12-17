@@ -277,7 +277,6 @@ function createBestPostsEmbed(bestPosts, lastUpdated) {
     });
 }
 
-// Function to fetch all messages in a thread using pagination
 async function fetchAllMessages(thread) {
   let allMessages = [];
   let lastMessageId = null;
@@ -302,7 +301,6 @@ async function fetchAllMessages(thread) {
   return allMessages;
 }
 
-// Helper function to sleep for a specified duration
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
